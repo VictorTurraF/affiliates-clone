@@ -4,16 +4,22 @@
 
 A local WordPress and WooCommerce shop that will support a future affiliate platform. The shop targets an Australian audience, uses Australian English and prices products in AUD. All purchases will be simulated.
 
-## Day 1: local environment
+## Current progress
 
-This stage sets up WordPress and MySQL using official images. WooCommerce, products and simulated payments will be configured in the following stages. No Dockerfile is required.
+Day 1 delivered a working local shop: WordPress and WooCommerce, AUD pricing, guest checkout, A$10 flat-rate shipping and manual demo payments. The first notebook purchase and its manual transition to Processing were confirmed by the project owner.
+
+See the [Day 1 log](docs/day-01/README.md) for settings, validation and outstanding work.
+
+## Local environment
+
+Docker Compose sets up WordPress and MySQL using official images. No Dockerfile is required. WooCommerce and the shop settings were configured manually in the dashboard; a fresh clone does not recreate that database state automatically.
 
 Prerequisites: a running Docker Engine or Docker Desktop installation with Docker Compose v2 or later.
 
 From the project directory:
 
 ```bash
-cp .env.example .env
+cp -n .env.example .env
 ```
 
 Set `DB_PASSWORD` in `.env` before the first startup. This is the database password, not the WordPress administrator password. Do not commit `.env` to Git.
@@ -45,6 +51,18 @@ Volumes preserve the database, images, themes and plugins between restarts. Do n
 
 The images use moving tags (`wordpress:php8.3-apache` and `mysql:8.4`). After validating the first run, recording their digests will allow the exact versions to be pinned. Changing the password in `.env` after initialising the database does not change the password stored in the database.
 
+## Backup
+
+With both services running, run this on the Docker host:
+
+```bash
+bash scripts/backup.sh
+```
+
+Backups are stored outside the repository in `~/.local/share/affiliates-backups/`, with private permissions. The script temporarily stops WordPress, exports MySQL, archives WordPress files and restarts WordPress. It includes `.env` and `compose.yaml`, so backups contain credentials and may contain customer data. Do not commit or share them publicly.
+
+Archive integrity and checksums are checked automatically. A successful backup does not prove restoration: a full restore test remains pending. Keep an additional copy on another device. If execution fails, the script retains an `.incomplete-*` folder for inspection and attempts to restart WordPress.
+
 ## Agreed scope
 
 - Approximately 12 simple stationery products, without variations.
@@ -62,7 +80,13 @@ Recommendations, advanced search, complex categories and real shipping/payment i
 
 ## Upcoming milestones
 
-One commit per day, with a verifiable deliverable. After validating the environment: install/configure WooCommerce, add the demo catalogue and validate the purchase flow. Do not connect a real payment provider in the WooCommerce wizard.
+One commit per day, with a verifiable deliverable.
+
+- Day 1 backup: created outside Git on 12 November 2026; archive integrity and checksum checks passed, and WordPress restarted, as confirmed by the project owner. Full restoration testing and the daily commit are still pending.
+- Day 2 proposal: expand the demo catalogue and test discounts, cancellations and refunds.
+- Later: implement affiliate tracking and configurable commissions.
+
+The current checkout uses an offline payment method labelled for demonstration. No real payment provider is connected. Dashboard changes live in the Docker volumes, not in Git.
 
 ## Reference
 

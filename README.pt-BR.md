@@ -4,16 +4,22 @@
 
 Loja local em WordPress e WooCommerce para alimentar uma futura plataforma de afiliados. Público australiano, idioma inglês australiano e moeda AUD. Todas as compras serão simuladas.
 
-## Dia 1: ambiente local
+## Progresso atual
 
-Esta etapa prepara WordPress e MySQL com imagens oficiais. WooCommerce, produtos e pagamentos simulados serão configurados nas próximas etapas. Não é necessário criar um Dockerfile.
+O Dia 1 entregou uma loja local funcionando: WordPress e WooCommerce, preços em AUD, compra sem cadastro, frete fixo de A$10 e pagamento manual de demonstração. A primeira compra do caderno e a alteração manual para Processing foram confirmadas pelo responsável pelo projeto.
+
+Veja o [registro do Dia 1](docs/day-01/README.pt-BR.md) para configurações, validação e pendências.
+
+## Ambiente local
+
+O Docker Compose prepara WordPress e MySQL com imagens oficiais. Não é necessário criar um Dockerfile. O WooCommerce e as configurações da loja foram definidos manualmente no painel; uma cópia nova do repositório não recria automaticamente esse estado do banco.
 
 Pré-requisitos: Docker Engine ou Docker Desktop em execução, com Docker Compose v2 ou superior.
 
 Na pasta do projeto:
 
 ```bash
-cp .env.example .env
+cp -n .env.example .env
 ```
 
 Edite `DB_PASSWORD` no arquivo `.env` antes da primeira inicialização. Essa senha é do banco, não do administrador do WordPress. Não envie `.env` ao Git.
@@ -45,6 +51,18 @@ Os volumes preservam banco, imagens, temas e plugins entre reinicializações. N
 
 As imagens usam tags móveis (`wordpress:php8.3-apache` e `mysql:8.4`). Após validar a primeira execução, registrar os digests permitirá fixar as versões exatas. Alterar a senha em `.env` depois de inicializar o banco não altera a senha armazenada nele.
 
+## Backup
+
+Com os dois serviços em execução, execute no computador que roda o Docker:
+
+```bash
+bash scripts/backup.sh
+```
+
+Os backups ficam fora do repositório, em `~/.local/share/affiliates-backups/`, com permissões privadas. O script pausa o WordPress, exporta o MySQL, arquiva os arquivos do WordPress e reinicia o WordPress. Inclui `.env` e `compose.yaml`: os backups contêm credenciais e podem conter dados de clientes. Não envie ao Git nem compartilhe publicamente.
+
+A integridade dos arquivos e as somas de verificação são conferidas automaticamente. Um backup concluído não comprova a restauração: o teste completo de restauração continua pendente. Guarde uma cópia adicional em outro dispositivo. Em caso de falha, o script mantém uma pasta `.incomplete-*` para inspeção e tenta reiniciar o WordPress.
+
 ## Escopo acordado
 
 - Cerca de 12 produtos simples de papelaria, sem variações.
@@ -62,7 +80,13 @@ Sem recomendações, busca avançada, categorias complexas ou integrações reai
 
 ## Próximas entregas
 
-Um commit por dia, com uma entrega verificável. Após validar o ambiente: instalar/configurar WooCommerce, cadastrar o catálogo de demonstração e validar o fluxo de compra. Não conectar um meio de pagamento real no assistente do WooCommerce.
+Um commit por dia, com uma entrega verificável.
+
+- Backup do Dia 1: criado fora do Git em 12 de novembro de 2026; integridade e somas de verificação aprovadas e WordPress reiniciado, conforme saída confirmada pelo responsável pelo projeto. O teste completo de restauração e o commit do dia ainda estão pendentes.
+- Proposta para o Dia 2: ampliar o catálogo e testar descontos, cancelamentos e reembolsos.
+- Depois: implementar rastreamento de afiliados e comissões configuráveis.
+
+O checkout atual usa um método de pagamento offline identificado como demonstração. Nenhum provedor de pagamento real está conectado. As alterações do painel ficam nos volumes Docker, não no Git.
 
 ## Referência
 
